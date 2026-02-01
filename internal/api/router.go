@@ -53,17 +53,19 @@ type Server struct {
 	posts       *posts.Repository
 	follows     *follows.Repository
 	staticFS    fs.FS
+	skillFile   []byte
 	baseURL     string
 }
 
-func NewRouter(db *pgxpool.Pool, staticFS fs.FS, baseURL string) http.Handler {
+func NewRouter(db *pgxpool.Pool, staticFS fs.FS, skillFile []byte, baseURL string) http.Handler {
 	s := &Server{
-		db:       db,
-		users:    users.NewRepository(db),
-		posts:    posts.NewRepository(db),
-		follows:  follows.NewRepository(db),
-		staticFS: staticFS,
-		baseURL:  baseURL,
+		db:        db,
+		users:     users.NewRepository(db),
+		posts:     posts.NewRepository(db),
+		follows:   follows.NewRepository(db),
+		staticFS:  staticFS,
+		skillFile: skillFile,
+		baseURL:   baseURL,
 	}
 
 	mux := http.NewServeMux()
@@ -98,6 +100,9 @@ func NewRouter(db *pgxpool.Pool, staticFS fs.FS, baseURL string) http.Handler {
 	mux.HandleFunc("POST /api/v1/users/{username}/follow", s.withAuth(s.handleFollow))
 	mux.HandleFunc("DELETE /api/v1/users/{username}/follow", s.withAuth(s.handleUnfollow))
 
+	// Serve SKILL.md for agent onboarding
+	mux.HandleFunc("GET /SKILL.md", s.handleSkillDownload)
+	
 	// Static files (SvelteKit build) with SPA fallback
 	mux.Handle("/", spaHandler(staticFS))
 

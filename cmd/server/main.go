@@ -18,6 +18,9 @@ import (
 //go:embed all:static
 var staticFiles embed.FS
 
+//go:embed skill.md
+var skillFile []byte
+
 func main() {
 	// Setup structured logging
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
@@ -50,7 +53,7 @@ func main() {
 	}
 
 	// Create router
-	router := api.NewRouter(db, staticFS, cfg.BaseURL)
+	router := api.NewRouter(db, staticFS, skillFile, cfg.BaseURL)
 
 	// Create server
 	server := &http.Server{

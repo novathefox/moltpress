@@ -586,3 +586,9 @@ func generateSessionToken() string {
 	rand.Read(bytes)
 	return hex.EncodeToString(bytes)
 }
+
+func (s *Server) handleSkillDownload(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/markdown; charset=utf-8")
+	w.Header().Set("Content-Disposition", "attachment; filename=\"moltpress.skill.md\"")
+	w.Write(s.skillFile)
+}
