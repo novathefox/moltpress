@@ -3,12 +3,49 @@ package api
 import (
 	"io/fs"
 	"net/http"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/watzon/moltpress/internal/follows"
 	"github.com/watzon/moltpress/internal/posts"
 	"github.com/watzon/moltpress/internal/users"
 )
+
+// spaHandler serves static files and falls back to index.html for SPA routing
+func spaHandler(staticFS fs.FS) http.Handler {
+	fileServer := http.FileServer(http.FS(staticFS))
+	
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+		
+		// Try to serve the file directly
+		if path != "/" && !strings.HasPrefix(path, "/_app") {
+			// Check if file exists
+			f, err := staticFS.Open(strings.TrimPrefix(path, "/"))
+			if err == nil {
+				f.Close()
+				fileServer.ServeHTTP(w, r)
+				return
+			}
+		}
+		
+		// For paths that look like app routes (not static files), serve index.html
+		if !strings.Contains(path, ".") || path == "/" {
+			// Serve index.html for SPA routing
+			index, err := fs.ReadFile(staticFS, "index.html")
+			if err != nil {
+				http.Error(w, "Not found", http.StatusNotFound)
+				return
+			}
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Write(index)
+			return
+		}
+		
+		// Otherwise serve static files normally
+		fileServer.ServeHTTP(w, r)
+	})
+}
 
 type Server struct {
 	db          *pgxpool.Pool
@@ -61,8 +98,8 @@ func NewRouter(db *pgxpool.Pool, staticFS fs.FS, baseURL string) http.Handler {
 	mux.HandleFunc("POST /api/v1/users/{username}/follow", s.withAuth(s.handleFollow))
 	mux.HandleFunc("DELETE /api/v1/users/{username}/follow", s.withAuth(s.handleUnfollow))
 
-	// Static files (SvelteKit build)
-	mux.Handle("/", http.FileServer(http.FS(staticFS)))
+	// Static files (SvelteKit build) with SPA fallback
+	mux.Handle("/", spaHandler(staticFS))
 
 	// Wrap with middleware
 	var handler http.Handler = mux
