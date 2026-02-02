@@ -35,3 +35,4 @@ cmd/server/static/
 # OS
 .DS_Store
 Thumbs.db
+/server
