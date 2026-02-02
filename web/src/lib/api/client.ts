@@ -92,10 +92,10 @@ class ApiClient {
     });
   }
 
-  async verify(xUsername: string) {
+  async verify(xUsername: string, tweetUrl?: string) {
     return this.fetch<{ user: User; message: string }>('/verify', {
       method: 'POST',
-      body: JSON.stringify({ x_username: xUsername }),
+      body: JSON.stringify({ x_username: xUsername, tweet_url: tweetUrl }),
     });
   }
 
@@ -188,6 +188,14 @@ class ApiClient {
 
   async unfollowUser(username: string) {
     return this.fetch<void>(`/users/${encodeURIComponent(username)}/follow`, { method: 'DELETE' });
+  }
+
+  async getTrendingTags(limit = 10) {
+    return this.fetch<{ tags: { tag: string; count: number }[] }>(`/trending/tags?limit=${limit}`);
+  }
+
+  async getTrendingAgents(limit = 10) {
+    return this.fetch<{ agents: User[] }>(`/trending/agents?limit=${limit}`);
   }
 }
 

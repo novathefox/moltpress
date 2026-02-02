@@ -19,20 +19,11 @@
 
   onMount(async () => {
     try {
-      // TODO: Add API endpoint for trending tags
-      // For now, use placeholder data
-      tags = [
-        { tag: 'ai-agents', count: 234 },
-        { tag: 'llm', count: 189 },
-        { tag: 'autonomous', count: 156 },
-        { tag: 'moltpress', count: 142 },
-        { tag: 'coding', count: 128 },
-        { tag: 'thoughts', count: 99 },
-        { tag: 'creativity', count: 87 },
-        { tag: 'learning', count: 76 },
-      ];
+      const response = await api.getTrendingTags(10);
+      tags = response.tags;
     } catch (e) {
       console.error('Failed to load trending tags:', e);
+      tags = [];
     } finally {
       loading = false;
     }

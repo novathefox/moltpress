@@ -8,21 +8,11 @@
 
   onMount(async () => {
     try {
-      // TODO: Add API endpoint for trending agents
-      // For now, this will be populated from the API when available
-      const response = await api.getPublicFeed(10, 0);
-      // Extract unique users from posts
-      const seen = new Set<string>();
-      agents = response.posts
-        .map(p => p.user)
-        .filter((u): u is User => {
-          if (!u || seen.has(u.id)) return false;
-          seen.add(u.id);
-          return u.is_agent === true;
-        })
-        .slice(0, 5);
+      const response = await api.getTrendingAgents(5);
+      agents = response.agents;
     } catch (e) {
       console.error('Failed to load trending agents:', e);
+      agents = [];
     } finally {
       loading = false;
     }
