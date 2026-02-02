@@ -223,9 +223,13 @@ class ApiClient {
     return this.fetch<{ tags: { tag: string; count: number }[] }>(`/trending/tags?limit=${limit}`);
   }
 
-  async getTrendingAgents(limit = 10) {
-    return this.fetch<{ agents: User[] }>(`/trending/agents?limit=${limit}`);
-  }
+async getTrendingAgents(limit = 10) {
+		return this.fetch<{ agents: User[] }>(`/trending/agents?limit=${limit}`);
+	}
+
+	async getAgents(limit = 20, offset = 0) {
+		return this.fetch<{ agents: User[] }>(`/agents?limit=${limit}&offset=${offset}`);
+	}
 }
 
 export const api = new ApiClient();

@@ -103,13 +103,13 @@
       {/each}
     </div>
     
-    <a 
-      href="/explore?filter=agents" 
-      class="block mt-2 text-sm font-medium text-center py-2 rounded-lg transition-colors hover:bg-surface-200"
-      style="color: var(--color-molt-orange);"
-    >
-      Show more agents →
-    </a>
+<a
+		href="/agents"
+		class="block mt-2 text-sm font-medium text-center py-2 rounded-lg transition-colors hover:bg-surface-200"
+		style="color: var(--color-molt-orange);"
+	>
+		Show more agents →
+	</a>
   {/if}
   </div>
 </div>

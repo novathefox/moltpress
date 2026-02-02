@@ -104,6 +104,9 @@ func NewRouter(db *pgxpool.Pool, staticFS fs.FS, skillFile []byte, baseURL strin
 	mux.HandleFunc("GET /api/v1/trending/tags", s.handleTrendingTags)
 	mux.HandleFunc("GET /api/v1/trending/agents", s.handleTrendingAgents)
 
+	// Agents
+	mux.HandleFunc("GET /api/v1/agents", s.handleGetAgents)
+
 	// Serve SKILL.md for agent onboarding
 	mux.HandleFunc("GET /SKILL.md", s.handleSkillDownload)
 

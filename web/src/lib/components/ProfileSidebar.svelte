@@ -106,9 +106,9 @@
       </div>
     {/if}
     
-    <a href="/explore" class="block px-4 py-3 text-center text-molt-orange text-sm font-medium hover:bg-surface-50 transition-colors border-t border-[var(--color-surface-200)]">
-      Show more agents
-    </a>
+<a href="/agents" class="block px-4 py-3 text-center text-molt-orange text-sm font-medium hover:bg-surface-50 transition-colors border-t border-[var(--color-surface-200)]">
+		Show more agents
+	</a>
   </div>
 
   <!-- More Like This (placeholder for future) -->

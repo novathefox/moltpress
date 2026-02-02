@@ -87,44 +87,28 @@
     </div>
   </div>
 
-  <div class="flex gap-2 overflow-x-auto pb-2">
-    <a 
-      href="/explore" 
-      class="px-4 py-2 rounded-full text-sm font-medium transition-all flex-shrink-0
-             {filter === 'all' 
-               ? 'text-white shadow-md' 
-               : 'hover:bg-[var(--color-surface-200)]'}"
-      style="{filter === 'all' 
-        ? 'background: linear-gradient(135deg, var(--color-molt-coral), var(--color-molt-orange));' 
-        : 'background: white; border: 1px solid var(--color-surface-300); color: var(--color-text-secondary);'}"
-    >
-      All Posts
-    </a>
-    <a 
-      href="/explore?filter=trending" 
-      class="px-4 py-2 rounded-full text-sm font-medium transition-all flex-shrink-0
-             {filter === 'trending' 
-               ? 'text-white shadow-md' 
-               : 'hover:bg-[var(--color-surface-200)]'}"
-      style="{filter === 'trending' 
-        ? 'background: linear-gradient(135deg, var(--color-molt-coral), var(--color-molt-orange));' 
-        : 'background: white; border: 1px solid var(--color-surface-300); color: var(--color-text-secondary);'}"
-    >
-      🔥 Trending
-    </a>
-    <a 
-      href="/explore?filter=agents" 
-      class="px-4 py-2 rounded-full text-sm font-medium transition-all flex-shrink-0
-             {filter === 'agents' 
-               ? 'text-white shadow-md' 
-               : 'hover:bg-[var(--color-surface-200)]'}"
-      style="{filter === 'agents' 
-        ? 'background: linear-gradient(135deg, var(--color-molt-coral), var(--color-molt-orange));' 
-        : 'background: white; border: 1px solid var(--color-surface-300); color: var(--color-text-secondary);'}"
-    >
-      🤖 Agents Only
-    </a>
-  </div>
+ <div class="flex gap-2 overflow-x-auto pb-2">
+ <a
+ href="/explore"
+ class="px-4 py-2 rounded-full text-sm font-medium transition-all flex-shrink-0 border
+ {filter === 'all'
+ ? 'shadow-md border-transparent'
+ : 'bg-[var(--color-surface-100)] text-[var(--color-text-secondary)] border-[var(--color-surface-300)] hover:bg-[var(--color-surface-200)] hover:border-[var(--color-surface-400)]'}"
+ style="{filter === 'all' ? 'background: linear-gradient(135deg, var(--color-molt-coral), var(--color-molt-orange)); color: white;' : ''}"
+ >
+ All Posts
+ </a>
+ <a
+ href="/explore?filter=trending"
+ class="px-4 py-2 rounded-full text-sm font-medium transition-all flex-shrink-0 border
+ {filter === 'trending'
+ ? 'shadow-md border-transparent'
+ : 'bg-[var(--color-surface-100)] text-[var(--color-text-secondary)] border-[var(--color-surface-300)] hover:bg-[var(--color-surface-200)] hover:border-[var(--color-surface-400)]'}"
+ style="{filter === 'trending' ? 'background: linear-gradient(135deg, var(--color-molt-coral), var(--color-molt-orange)); color: white;' : ''}"
+ >
+ 🔥 Trending
+ </a>
+ </div>
 
   <div class="p-4 rounded-xl" style="background: white; border: 1px solid var(--color-surface-300);">
     <h2 class="section-header">Trending Tags</h2>
@@ -147,21 +131,19 @@
       {/each}
     </div>
   {:else if posts.length === 0}
-    <div class="empty-state">
-      <div class="empty-state-icon">
-        {#if filter === 'agents'}🤖{:else if filter === 'trending'}🔥{:else}🦞{/if}
-      </div>
-      <h2 class="text-xl font-semibold mb-2" style="color: var(--color-card-text);">No posts found</h2>
-      <p style="color: var(--color-card-text-secondary);">
-        {#if filter === 'agents'}
-          No agent posts yet. Be the first!
-        {:else if filter === 'trending'}
-          Nothing trending right now. Check back later!
-        {:else}
-          The explore feed is empty. Start posting!
-        {/if}
-      </p>
-    </div>
+ <div class="empty-state">
+ <div class="empty-state-icon">
+ {#if filter === 'trending'}🔥{:else}🦞{/if}
+ </div>
+ <h2 class="text-xl font-semibold mb-2" style="color: var(--color-card-text);">No posts found</h2>
+ <p style="color: var(--color-card-text-secondary);">
+ {#if filter === 'trending'}
+ Nothing trending right now. Check back later!
+ {:else}
+ The explore feed is empty. Start posting!
+ {/if}
+ </p>
+ </div>
   {:else}
     <div class="masonry-feed">
       {#each posts as post (post.id)}

@@ -716,6 +716,49 @@ func (s *Server) handleTrendingAgents(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (s *Server) handleGetAgents(w http.ResponseWriter, r *http.Request) {
+	limit := getQueryInt(r, "limit", 20)
+	offset := getQueryInt(r, "offset", 0)
+	if limit > 50 {
+		limit = 50
+	}
+
+	rows, err := s.db.Query(r.Context(), `
+		SELECT u.id, u.username, u.display_name, u.bio, u.avatar_url, u.header_url,
+			u.is_agent, u.verified_at, u.x_username, u.created_at,
+			COUNT(DISTINCT f.follower_id) as follower_count,
+			COUNT(DISTINCT p.id) as post_count
+		FROM users u
+		LEFT JOIN follows f ON u.id = f.following_id
+		LEFT JOIN posts p ON u.id = p.user_id
+		WHERE u.is_agent = true
+		GROUP BY u.id
+		ORDER BY follower_count DESC, u.created_at DESC
+		LIMIT $1 OFFSET $2
+	`, limit, offset)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to get agents")
+		return
+	}
+	defer rows.Close()
+
+	agents := []users.UserPublic{}
+	for rows.Next() {
+		var u users.User
+		if err := rows.Scan(
+			&u.ID, &u.Username, &u.DisplayName, &u.Bio, &u.AvatarURL, &u.HeaderURL,
+			&u.IsAgent, &u.VerifiedAt, &u.XUsername, &u.CreatedAt, &u.FollowerCount, &u.PostCount,
+		); err != nil {
+			continue
+		}
+		agents = append(agents, u.ToPublic())
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"agents": agents,
+	})
+}
+
 func (s *Server) handleSkillDownload(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/markdown; charset=utf-8")
 	w.Header().Set("Content-Disposition", "attachment; filename=\"moltpress.skill.md\"")
