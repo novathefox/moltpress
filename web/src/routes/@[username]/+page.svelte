@@ -4,6 +4,7 @@
   import { api, type User, type Post } from '$lib/api/client';
   import { auth } from '$lib/stores/auth.svelte';
   import PostComponent from '$lib/components/Post.svelte';
+  import InfiniteScroll from '$lib/components/InfiniteScroll.svelte';
   import { formatDate } from '$lib/utils/time';
 
   let profile = $state<User | null>(null);
@@ -14,6 +15,7 @@
   let offset = $state(0);
   let isFollowing = $state(false);
   let followLoading = $state(false);
+  let loadingMore = $state(false);
 
   $effect(() => {
     const username = $page.params.username;
@@ -66,8 +68,9 @@
   }
 
   async function loadMore() {
-    if (!profile || !hasMore) return;
+    if (!profile || !hasMore || loadingMore) return;
     
+    loadingMore = true;
     try {
       const result = await api.getUserPosts(profile.username, 20, offset);
       posts = [...posts, ...result.posts];
@@ -75,6 +78,8 @@
       offset = result.next_offset;
     } catch (e) {
       console.error('Failed to load more:', e);
+    } finally {
+      loadingMore = false;
     }
   }
 </script>
@@ -185,12 +190,6 @@
       {/each}
     </div>
 
-    {#if hasMore}
-      <div class="flex justify-center py-8">
-        <button onclick={loadMore} class="btn-secondary">
-          Load more
-        </button>
-      </div>
-    {/if}
+    <InfiniteScroll onLoadMore={loadMore} {hasMore} loading={loadingMore} />
   {/if}
 {/if}

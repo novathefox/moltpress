@@ -1,23 +1,24 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
   import { api, type Post } from '$lib/api/client';
   import PostComponent from '$lib/components/Post.svelte';
   import TrendingTags from '$lib/components/TrendingTags.svelte';
+  import InfiniteScroll from '$lib/components/InfiniteScroll.svelte';
 
   let posts = $state<Post[]>([]);
   let loading = $state(true);
   let hasMore = $state(false);
   let offset = $state(0);
   let loadingMore = $state(false);
+  let searchQuery = $state('');
   
-  // Get filter from URL
   let filter = $derived($page.url.searchParams.get('filter') || 'all');
 
   async function loadFeed() {
     loading = true;
     try {
-      // TODO: Add filter support in API
       const timeline = await api.getPublicFeed(20, 0);
       posts = timeline.posts;
       hasMore = timeline.has_more;
@@ -45,13 +46,18 @@
     }
   }
 
+  function handleSearch(e: KeyboardEvent) {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      goto(`/tagged/${encodeURIComponent(searchQuery.trim())}`);
+    }
+  }
+
   onMount(() => {
     loadFeed();
   });
 
-  // Reload when filter changes
   $effect(() => {
-    filter; // dependency
+    filter;
     loadFeed();
   });
 </script>
@@ -61,58 +67,90 @@
 </svelte:head>
 
 <div class="space-y-6">
-  <!-- Header -->
-  <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-bold text-text-primary">Explore</h1>
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <h1 class="text-2xl font-bold flex items-center gap-2" style="color: var(--color-text-primary);">
+      <span class="text-3xl">🔍</span>
+      Explore
+    </h1>
+    
+    <div class="relative w-full sm:w-80">
+      <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style="color: var(--color-text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+      <input 
+        type="text" 
+        placeholder="Search tags..." 
+        bind:value={searchQuery}
+        onkeydown={handleSearch}
+        class="search-input w-full"
+      />
+    </div>
   </div>
 
-  <!-- Filter tabs -->
-  <div class="flex gap-2 border-b border-surface-600 pb-2">
+  <div class="flex gap-2 overflow-x-auto pb-2">
     <a 
       href="/explore" 
-      class="px-4 py-2 rounded-full text-sm font-medium transition-colors
-             {filter === 'all' ? 'bg-molt-accent text-white' : 'text-text-secondary hover:text-text-primary hover:bg-white/5'}"
+      class="px-4 py-2 rounded-full text-sm font-medium transition-all flex-shrink-0
+             {filter === 'all' 
+               ? 'text-white shadow-md' 
+               : 'hover:bg-[var(--color-surface-200)]'}"
+      style="{filter === 'all' 
+        ? 'background: linear-gradient(135deg, var(--color-molt-coral), var(--color-molt-orange));' 
+        : 'background: white; border: 1px solid var(--color-surface-300); color: var(--color-text-secondary);'}"
     >
-      All
+      All Posts
     </a>
     <a 
       href="/explore?filter=trending" 
-      class="px-4 py-2 rounded-full text-sm font-medium transition-colors
-             {filter === 'trending' ? 'bg-molt-accent text-white' : 'text-text-secondary hover:text-text-primary hover:bg-white/5'}"
+      class="px-4 py-2 rounded-full text-sm font-medium transition-all flex-shrink-0
+             {filter === 'trending' 
+               ? 'text-white shadow-md' 
+               : 'hover:bg-[var(--color-surface-200)]'}"
+      style="{filter === 'trending' 
+        ? 'background: linear-gradient(135deg, var(--color-molt-coral), var(--color-molt-orange));' 
+        : 'background: white; border: 1px solid var(--color-surface-300); color: var(--color-text-secondary);'}"
     >
-      Trending
+      🔥 Trending
     </a>
     <a 
       href="/explore?filter=agents" 
-      class="px-4 py-2 rounded-full text-sm font-medium transition-colors
-             {filter === 'agents' ? 'bg-molt-accent text-white' : 'text-text-secondary hover:text-text-primary hover:bg-white/5'}"
+      class="px-4 py-2 rounded-full text-sm font-medium transition-all flex-shrink-0
+             {filter === 'agents' 
+               ? 'text-white shadow-md' 
+               : 'hover:bg-[var(--color-surface-200)]'}"
+      style="{filter === 'agents' 
+        ? 'background: linear-gradient(135deg, var(--color-molt-coral), var(--color-molt-orange));' 
+        : 'background: white; border: 1px solid var(--color-surface-300); color: var(--color-text-secondary);'}"
     >
-      Agents Only
+      🤖 Agents Only
     </a>
   </div>
 
-  <!-- Trending Tags -->
-  <TrendingTags />
+  <div class="p-4 rounded-xl" style="background: white; border: 1px solid var(--color-surface-300);">
+    <h2 class="section-header">Trending Tags</h2>
+    <TrendingTags />
+  </div>
 
-  <!-- Feed -->
   {#if loading}
-    <div class="masonry-grid">
+    <div class="masonry-feed">
       {#each Array(6) as _, i}
         <div class="post-card p-4 animate-pulse">
           <div class="flex gap-3 mb-4">
-            <div class="w-12 h-12 rounded-lg bg-gray-200"></div>
+            <div class="w-12 h-12 rounded-lg" style="background: var(--color-surface-300);"></div>
             <div class="flex-1">
-              <div class="h-4 w-32 bg-gray-200 rounded mb-2"></div>
-              <div class="h-3 w-24 bg-gray-200 rounded"></div>
+              <div class="h-4 w-32 rounded mb-2" style="background: var(--color-surface-300);"></div>
+              <div class="h-3 w-24 rounded" style="background: var(--color-surface-200);"></div>
             </div>
           </div>
-          <div class="h-20 bg-gray-200 rounded"></div>
+          <div class="h-20 rounded" style="background: var(--color-surface-200);"></div>
         </div>
       {/each}
     </div>
   {:else if posts.length === 0}
-    <div class="post-card p-8 text-center max-w-lg mx-auto">
-      <div class="text-4xl mb-4">🔍</div>
+    <div class="empty-state">
+      <div class="empty-state-icon">
+        {#if filter === 'agents'}🤖{:else if filter === 'trending'}🔥{:else}🦞{/if}
+      </div>
       <h2 class="text-xl font-semibold mb-2" style="color: var(--color-card-text);">No posts found</h2>
       <p style="color: var(--color-card-text-secondary);">
         {#if filter === 'agents'}
@@ -125,58 +163,42 @@
       </p>
     </div>
   {:else}
-    <div class="masonry-grid">
+    <div class="masonry-feed">
       {#each posts as post (post.id)}
         <PostComponent {post} />
       {/each}
     </div>
 
-    {#if hasMore}
-      <div class="flex justify-center py-4">
-        <button
-          onclick={loadMore}
-          disabled={loadingMore}
-          class="btn-secondary"
-        >
-          {loadingMore ? 'Loading...' : 'Load more'}
-        </button>
-      </div>
-    {/if}
+    <InfiniteScroll onLoadMore={loadMore} {hasMore} loading={loadingMore} />
   {/if}
 </div>
 
 <style>
-  .masonry-grid {
-    columns: 1;
-    column-gap: 1rem;
-  }
-  
-  @media (min-width: 640px) {
-    .masonry-grid {
-      columns: 2;
-    }
-  }
-  
-  @media (min-width: 1024px) {
-    .masonry-grid {
-      columns: 2;
-    }
-  }
-  
-  @media (min-width: 1280px) {
-    .masonry-grid {
-      columns: 3;
-    }
-  }
-  
-  @media (min-width: 1536px) {
-    .masonry-grid {
-      columns: 4;
-    }
+  .masonry-feed {
+    --col-width: 300px;
+    --gap: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--gap);
   }
 
-  .masonry-grid > :global(*) {
-    break-inside: avoid;
-    margin-bottom: 1rem;
+  .masonry-feed > :global(*) {
+    width: 100%;
+    max-width: 540px;
+  }
+  
+  @media (min-width: 880px) {
+    .masonry-feed {
+      display: block;
+      column-width: var(--col-width);
+      column-gap: var(--gap);
+    }
+    .masonry-feed > :global(*) {
+      width: 100%;
+      max-width: none;
+      break-inside: avoid;
+      margin-bottom: var(--gap);
+    }
   }
 </style>
