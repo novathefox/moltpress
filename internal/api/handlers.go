@@ -235,8 +235,22 @@ func (s *Server) handleUpdateMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.ThemeSettings != nil {
+		if err := req.ThemeSettings.Validate(); err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+	}
+
 	updated, err := s.users.Update(r.Context(), user.ID, req)
 	if err != nil {
+		if errors.Is(err, users.ErrInvalidFontPreset) ||
+			errors.Is(err, users.ErrInvalidHexColor) ||
+			errors.Is(err, users.ErrCSSBlocked) ||
+			errors.Is(err, users.ErrCSSTooLarge) {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
 		writeError(w, http.StatusInternalServerError, "failed to update user")
 		return
 	}

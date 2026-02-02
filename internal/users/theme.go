@@ -217,3 +217,96 @@ func SanitizeCSS(input string) (string, error) {
 
 	return strings.Join(sanitizedRules, "; ") + ";", nil
 }
+
+// MergeThemeSettings merges update into existing, preserving existing values.
+// Returns merged result where update values take precedence over existing.
+func MergeThemeSettings(existing, update *ThemeSettings) *ThemeSettings {
+	if existing == nil {
+		return update
+	}
+	if update == nil {
+		return existing
+	}
+
+	result := &ThemeSettings{}
+
+	// Merge colors
+	if existing.Colors != nil || update.Colors != nil {
+		result.Colors = &ThemeColors{}
+		if existing.Colors != nil {
+			result.Colors.Background = existing.Colors.Background
+			result.Colors.Text = existing.Colors.Text
+			result.Colors.Accent = existing.Colors.Accent
+			result.Colors.Link = existing.Colors.Link
+			result.Colors.Title = existing.Colors.Title
+		}
+		if update.Colors != nil {
+			if update.Colors.Background != nil {
+				result.Colors.Background = update.Colors.Background
+			}
+			if update.Colors.Text != nil {
+				result.Colors.Text = update.Colors.Text
+			}
+			if update.Colors.Accent != nil {
+				result.Colors.Accent = update.Colors.Accent
+			}
+			if update.Colors.Link != nil {
+				result.Colors.Link = update.Colors.Link
+			}
+			if update.Colors.Title != nil {
+				result.Colors.Title = update.Colors.Title
+			}
+		}
+	}
+
+	// Merge fonts
+	if existing.Fonts != nil || update.Fonts != nil {
+		result.Fonts = &ThemeFonts{}
+		if existing.Fonts != nil {
+			result.Fonts.Title = existing.Fonts.Title
+			result.Fonts.Body = existing.Fonts.Body
+		}
+		if update.Fonts != nil {
+			if update.Fonts.Title != nil {
+				result.Fonts.Title = update.Fonts.Title
+			}
+			if update.Fonts.Body != nil {
+				result.Fonts.Body = update.Fonts.Body
+			}
+		}
+	}
+
+	// Merge toggles
+	if existing.Toggles != nil || update.Toggles != nil {
+		result.Toggles = &ThemeToggles{}
+		if existing.Toggles != nil {
+			result.Toggles.ShowAvatar = existing.Toggles.ShowAvatar
+			result.Toggles.ShowStats = existing.Toggles.ShowStats
+			result.Toggles.ShowFollowerCount = existing.Toggles.ShowFollowerCount
+			result.Toggles.ShowBio = existing.Toggles.ShowBio
+		}
+		if update.Toggles != nil {
+			if update.Toggles.ShowAvatar != nil {
+				result.Toggles.ShowAvatar = update.Toggles.ShowAvatar
+			}
+			if update.Toggles.ShowStats != nil {
+				result.Toggles.ShowStats = update.Toggles.ShowStats
+			}
+			if update.Toggles.ShowFollowerCount != nil {
+				result.Toggles.ShowFollowerCount = update.Toggles.ShowFollowerCount
+			}
+			if update.Toggles.ShowBio != nil {
+				result.Toggles.ShowBio = update.Toggles.ShowBio
+			}
+		}
+	}
+
+	// CustomCSS: update overwrites completely (no merge)
+	if update.CustomCSS != nil {
+		result.CustomCSS = update.CustomCSS
+	} else if existing.CustomCSS != nil {
+		result.CustomCSS = existing.CustomCSS
+	}
+
+	return result
+}
