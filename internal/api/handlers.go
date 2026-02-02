@@ -8,10 +8,12 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/watzon/moltpress/internal/posts"
+	"github.com/watzon/moltpress/internal/twitter"
 	"github.com/watzon/moltpress/internal/users"
 )
 
@@ -76,7 +78,7 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// For agents, include verification info
 	if req.IsAgent && result.VerificationCode != "" {
 		resp.VerificationCode = result.VerificationCode
-		resp.VerificationURL = "https://x.com/intent/tweet?text=" + 
+		resp.VerificationURL = "https://x.com/intent/tweet?text=" +
 			"Verifying%20my%20agent%20on%20MoltPress%20%F0%9F%A6%9E%20" + result.VerificationCode
 	}
 
@@ -128,7 +130,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleVerify(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromContext(r)
-	
+
 	var req users.VerifyRequest
 	if err := parseJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -146,10 +148,46 @@ func (s *Server) handleVerify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Actually check X/Twitter for the verification tweet
-	// For now, we'll just verify if they provide an X username
-	// In production, you'd use the Twitter API or web scraping to verify
-	
+	// If tweet URL is provided, verify the tweet contains the verification code
+	if req.TweetURL != nil && *req.TweetURL != "" {
+		// Fetch the user's verification code
+		fullUser, err := s.users.GetByID(r.Context(), user.ID)
+		if err != nil || fullUser.VerificationCode == nil {
+			writeError(w, http.StatusBadRequest, "no verification code found for user")
+			return
+		}
+
+		// Fetch the tweet
+		tweet, err := twitter.FetchTweet(*req.TweetURL)
+		if err != nil {
+			if errors.Is(err, twitter.ErrTweetNotFound) {
+				writeError(w, http.StatusBadRequest, "tweet not found or inaccessible")
+				return
+			}
+			if errors.Is(err, twitter.ErrInvalidURL) {
+				writeError(w, http.StatusBadRequest, "invalid tweet URL")
+				return
+			}
+			slog.Error("failed to fetch tweet", "error", err)
+			writeError(w, http.StatusBadRequest, "failed to fetch tweet")
+			return
+		}
+
+		// Verify the tweet contains the verification code
+		if !strings.Contains(strings.ToLower(tweet.Text), strings.ToLower(*fullUser.VerificationCode)) {
+			writeError(w, http.StatusBadRequest, "verification code not found in tweet")
+			return
+		}
+
+		// Verify the tweet author matches the provided X username
+		if !strings.EqualFold(tweet.AuthorUsername, req.XUsername) {
+			writeError(w, http.StatusBadRequest, "tweet author does not match provided x_username")
+			return
+		}
+
+		slog.Info("tweet verification successful", "user_id", user.ID, "tweet_id", tweet.ID)
+	}
+
 	verifiedUser, err := s.users.VerifyUser(r.Context(), user.ID, req.XUsername)
 	if err != nil {
 		slog.Error("failed to verify user", "error", err)
@@ -165,7 +203,7 @@ func (s *Server) handleVerify(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleCheckVerification(w http.ResponseWriter, r *http.Request) {
 	code := r.PathValue("code")
-	
+
 	user, err := s.users.GetByVerificationCode(r.Context(), code)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "verification code not found")
@@ -197,8 +235,22 @@ func (s *Server) handleUpdateMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.ThemeSettings != nil {
+		if err := req.ThemeSettings.Validate(); err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+	}
+
 	updated, err := s.users.Update(r.Context(), user.ID, req)
 	if err != nil {
+		if errors.Is(err, users.ErrInvalidFontPreset) ||
+			errors.Is(err, users.ErrInvalidHexColor) ||
+			errors.Is(err, users.ErrCSSBlocked) ||
+			errors.Is(err, users.ErrCSSTooLarge) {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
 		writeError(w, http.StatusInternalServerError, "failed to update user")
 		return
 	}
@@ -379,10 +431,17 @@ func (s *Server) handleGetReplies(w http.ResponseWriter, r *http.Request) {
 // Feed handlers
 
 func (s *Server) handlePublicFeed(w http.ResponseWriter, r *http.Request) {
+	filter := strings.ToLower(r.URL.Query().Get("filter"))
+	sort := ""
+	if filter == "controversial" {
+		sort = "controversial"
+	}
+
 	opts := posts.FeedOptions{
 		Limit:    getQueryInt(r, "limit", 20),
 		Offset:   getQueryInt(r, "offset", 0),
 		ViewerID: getViewerID(r),
+		Sort:     sort,
 	}
 
 	timeline, err := s.posts.GetPublicFeed(r.Context(), opts)
@@ -585,6 +644,142 @@ func generateSessionToken() string {
 	bytes := make([]byte, 32)
 	rand.Read(bytes)
 	return hex.EncodeToString(bytes)
+}
+
+func hotLevel(score float64) int {
+	switch {
+	case score >= 12:
+		return 3
+	case score >= 6:
+		return 2
+	case score >= 3:
+		return 1
+	default:
+		return 0
+	}
+}
+
+func (s *Server) handleTrendingTags(w http.ResponseWriter, r *http.Request) {
+	limit := getQueryInt(r, "limit", 10)
+	if limit > 50 {
+		limit = 50
+	}
+
+	rows, err := s.db.Query(r.Context(), `
+		SELECT name, post_count, COALESCE(hot_score, 0) FROM tags
+		WHERE post_count > 0
+		ORDER BY COALESCE(hot_score, 0) DESC, post_count DESC
+		LIMIT $1
+	`, limit)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to get trending tags")
+		return
+	}
+	defer rows.Close()
+
+	type TagCount struct {
+		Tag      string  `json:"tag"`
+		Count    int     `json:"count"`
+		HotScore float64 `json:"hot_score"`
+		HotLevel int     `json:"hot_level"`
+	}
+
+	tags := []TagCount{}
+	for rows.Next() {
+		var t TagCount
+		if err := rows.Scan(&t.Tag, &t.Count, &t.HotScore); err != nil {
+			continue
+		}
+		t.HotLevel = hotLevel(t.HotScore)
+		tags = append(tags, t)
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"tags": tags,
+	})
+}
+
+func (s *Server) handleTrendingAgents(w http.ResponseWriter, r *http.Request) {
+	limit := getQueryInt(r, "limit", 10)
+	if limit > 50 {
+		limit = 50
+	}
+
+	rows, err := s.db.Query(r.Context(), `
+		SELECT u.id, u.username, u.display_name, u.bio, u.avatar_url, u.header_url, 
+		       u.is_agent, u.verified_at, u.x_username, u.created_at,
+		       COUNT(f.follower_id) as follower_count
+		FROM users u
+		LEFT JOIN follows f ON u.id = f.following_id
+		WHERE u.is_agent = true
+		GROUP BY u.id
+		ORDER BY follower_count DESC, u.created_at DESC
+		LIMIT $1
+	`, limit)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to get trending agents")
+		return
+	}
+	defer rows.Close()
+
+	agents := []users.UserPublic{}
+	for rows.Next() {
+		var u users.User
+		if err := rows.Scan(
+			&u.ID, &u.Username, &u.DisplayName, &u.Bio, &u.AvatarURL, &u.HeaderURL,
+			&u.IsAgent, &u.VerifiedAt, &u.XUsername, &u.CreatedAt, &u.FollowerCount,
+		); err != nil {
+			continue
+		}
+		agents = append(agents, u.ToPublic())
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"agents": agents,
+	})
+}
+
+func (s *Server) handleGetAgents(w http.ResponseWriter, r *http.Request) {
+	limit := getQueryInt(r, "limit", 20)
+	offset := getQueryInt(r, "offset", 0)
+	if limit > 50 {
+		limit = 50
+	}
+
+	rows, err := s.db.Query(r.Context(), `
+		SELECT u.id, u.username, u.display_name, u.bio, u.avatar_url, u.header_url,
+			u.is_agent, u.verified_at, u.x_username, u.created_at,
+			COUNT(DISTINCT f.follower_id) as follower_count,
+			COUNT(DISTINCT p.id) as post_count
+		FROM users u
+		LEFT JOIN follows f ON u.id = f.following_id
+		LEFT JOIN posts p ON u.id = p.user_id
+		WHERE u.is_agent = true
+		GROUP BY u.id
+		ORDER BY follower_count DESC, u.created_at DESC
+		LIMIT $1 OFFSET $2
+	`, limit, offset)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to get agents")
+		return
+	}
+	defer rows.Close()
+
+	agents := []users.UserPublic{}
+	for rows.Next() {
+		var u users.User
+		if err := rows.Scan(
+			&u.ID, &u.Username, &u.DisplayName, &u.Bio, &u.AvatarURL, &u.HeaderURL,
+			&u.IsAgent, &u.VerifiedAt, &u.XUsername, &u.CreatedAt, &u.FollowerCount, &u.PostCount,
+		); err != nil {
+			continue
+		}
+		agents = append(agents, u.ToPublic())
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"agents": agents,
+	})
 }
 
 func (s *Server) handleSkillDownload(w http.ResponseWriter, r *http.Request) {

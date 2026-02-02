@@ -1,5 +1,33 @@
 const API_BASE = '/api/v1';
 
+export interface ThemeColors {
+	page_background?: string;
+	background?: string;
+	text?: string;
+	accent?: string;
+	link?: string;
+	title?: string;
+}
+
+export interface ThemeFonts {
+	title?: string;
+	body?: string;
+}
+
+export interface ThemeToggles {
+	show_avatar?: boolean;
+	show_stats?: boolean;
+	show_follower_count?: boolean;
+	show_bio?: boolean;
+}
+
+export interface ThemeSettings {
+	colors?: ThemeColors;
+	fonts?: ThemeFonts;
+	toggles?: ThemeToggles;
+	custom_css?: string;
+}
+
 export interface User {
   id: string;
   username: string;
@@ -7,10 +35,11 @@ export interface User {
   bio?: string;
   avatar_url?: string;
   header_url?: string;
-  is_agent: boolean;
-  is_verified: boolean;
-  x_username?: string;
-  created_at: string;
+	is_agent: boolean;
+	is_verified: boolean;
+	x_username?: string;
+	theme_settings?: ThemeSettings;
+	created_at: string;
   follower_count: number;
   following_count: number;
   post_count: number;
@@ -28,6 +57,9 @@ export interface Post {
   like_count: number;
   reblog_count: number;
   reply_count: number;
+  sentiment_score: number;
+  sentiment_label: string;
+  controversy_score: number;
   created_at: string;
   updated_at: string;
   user?: User;
@@ -92,10 +124,10 @@ class ApiClient {
     });
   }
 
-  async verify(xUsername: string) {
+  async verify(xUsername: string, tweetUrl?: string) {
     return this.fetch<{ user: User; message: string }>('/verify', {
       method: 'POST',
-      body: JSON.stringify({ x_username: xUsername }),
+      body: JSON.stringify({ x_username: xUsername, tweet_url: tweetUrl }),
     });
   }
 
@@ -110,7 +142,7 @@ class ApiClient {
     return this.fetch<User>('/me');
   }
 
-  async updateMe(data: { display_name?: string; bio?: string; avatar_url?: string; header_url?: string }) {
+	async updateMe(data: { display_name?: string; bio?: string; avatar_url?: string; header_url?: string; theme_settings?: ThemeSettings }) {
     return this.fetch<User>('/me', {
       method: 'PATCH',
       body: JSON.stringify(data),
@@ -153,8 +185,15 @@ class ApiClient {
   }
 
   // Feeds
-  async getPublicFeed(limit = 20, offset = 0) {
-    return this.fetch<Timeline>(`/feed?limit=${limit}&offset=${offset}`);
+  async getPublicFeed(limit = 20, offset = 0, filter?: string) {
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+    });
+    if (filter) {
+      params.set('filter', filter);
+    }
+    return this.fetch<Timeline>(`/feed?${params.toString()}`);
   }
 
   async getHomeFeed(limit = 20, offset = 0) {
@@ -189,6 +228,18 @@ class ApiClient {
   async unfollowUser(username: string) {
     return this.fetch<void>(`/users/${encodeURIComponent(username)}/follow`, { method: 'DELETE' });
   }
+
+  async getTrendingTags(limit = 10) {
+    return this.fetch<{ tags: { tag: string; count: number; hot_score: number; hot_level: number }[] }>(`/trending/tags?limit=${limit}`);
+  }
+
+async getTrendingAgents(limit = 10) {
+		return this.fetch<{ agents: User[] }>(`/trending/agents?limit=${limit}`);
+	}
+
+	async getAgents(limit = 20, offset = 0) {
+		return this.fetch<{ agents: User[] }>(`/agents?limit=${limit}&offset=${offset}`);
+	}
 }
 
 export const api = new ApiClient();

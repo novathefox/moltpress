@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 
 	"github.com/google/uuid"
@@ -13,8 +14,8 @@ import (
 )
 
 var (
-	ErrUserNotFound      = errors.New("user not found")
-	ErrUsernameExists    = errors.New("username already exists")
+	ErrUserNotFound       = errors.New("user not found")
+	ErrUsernameExists     = errors.New("username already exists")
 	ErrInvalidCredentials = errors.New("invalid credentials")
 )
 
@@ -112,18 +113,25 @@ func (r *Repository) GetByID(ctx context.Context, id uuid.UUID) (*User, error) {
 
 func (r *Repository) GetByUsername(ctx context.Context, username string) (*User, error) {
 	user := &User{}
+	var themeJSON []byte
 	err := r.db.QueryRow(ctx, `
-		SELECT id, username, display_name, bio, avatar_url, header_url, is_agent, created_at, updated_at
+		SELECT id, username, display_name, bio, avatar_url, header_url, is_agent, created_at, updated_at, theme_settings
 		FROM users WHERE username = $1
 	`, username).Scan(
 		&user.ID, &user.Username, &user.DisplayName, &user.Bio,
 		&user.AvatarURL, &user.HeaderURL, &user.IsAgent, &user.CreatedAt, &user.UpdatedAt,
+		&themeJSON,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrUserNotFound
 		}
 		return nil, err
+	}
+
+	if themeJSON != nil {
+		user.ThemeSettings = &ThemeSettings{}
+		json.Unmarshal(themeJSON, user.ThemeSettings)
 	}
 
 	return user, nil
@@ -149,19 +157,55 @@ func (r *Repository) GetByAPIKey(ctx context.Context, apiKey string) (*User, err
 }
 
 func (r *Repository) Update(ctx context.Context, id uuid.UUID, req UpdateUserRequest) (*User, error) {
+	var themeSettingsJSON []byte
+
+	if req.ThemeSettings != nil {
+		if err := req.ThemeSettings.Validate(); err != nil {
+			return nil, err
+		}
+
+		if req.ThemeSettings.CustomCSS != nil {
+			sanitized, err := SanitizeCSS(*req.ThemeSettings.CustomCSS)
+			if err != nil {
+				return nil, err
+			}
+			req.ThemeSettings.CustomCSS = &sanitized
+		}
+
+		var existingThemeJSON []byte
+		err := r.db.QueryRow(ctx, `SELECT theme_settings FROM users WHERE id = $1`, id).Scan(&existingThemeJSON)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return nil, err
+		}
+
+		var existingTheme *ThemeSettings
+		if existingThemeJSON != nil {
+			existingTheme = &ThemeSettings{}
+			if err := json.Unmarshal(existingThemeJSON, existingTheme); err != nil {
+				existingTheme = nil
+			}
+		}
+
+		merged := MergeThemeSettings(existingTheme, req.ThemeSettings)
+		themeSettingsJSON, _ = json.Marshal(merged)
+	}
+
 	user := &User{}
+	var themeJSON []byte
 	err := r.db.QueryRow(ctx, `
 		UPDATE users SET
 			display_name = COALESCE($2, display_name),
 			bio = COALESCE($3, bio),
 			avatar_url = COALESCE($4, avatar_url),
 			header_url = COALESCE($5, header_url),
+			theme_settings = COALESCE($6, theme_settings),
 			updated_at = CURRENT_TIMESTAMP
 		WHERE id = $1
-		RETURNING id, username, display_name, bio, avatar_url, header_url, is_agent, created_at, updated_at
-	`, id, req.DisplayName, req.Bio, req.AvatarURL, req.HeaderURL).Scan(
+		RETURNING id, username, display_name, bio, avatar_url, header_url, is_agent, created_at, updated_at, theme_settings
+	`, id, req.DisplayName, req.Bio, req.AvatarURL, req.HeaderURL, themeSettingsJSON).Scan(
 		&user.ID, &user.Username, &user.DisplayName, &user.Bio,
 		&user.AvatarURL, &user.HeaderURL, &user.IsAgent, &user.CreatedAt, &user.UpdatedAt,
+		&themeJSON,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -170,17 +214,23 @@ func (r *Repository) Update(ctx context.Context, id uuid.UUID, req UpdateUserReq
 		return nil, err
 	}
 
+	if themeJSON != nil {
+		user.ThemeSettings = &ThemeSettings{}
+		json.Unmarshal(themeJSON, user.ThemeSettings)
+	}
+
 	return user, nil
 }
 
 func (r *Repository) GetWithStats(ctx context.Context, id uuid.UUID, viewerID *uuid.UUID) (*User, error) {
 	user := &User{}
 	var isFollowing bool
+	var themeJSON []byte
 
 	err := r.db.QueryRow(ctx, `
 		SELECT 
 			u.id, u.username, u.display_name, u.bio, u.avatar_url, u.header_url, 
-			u.is_agent, u.created_at, u.updated_at,
+			u.is_agent, u.created_at, u.updated_at, u.theme_settings,
 			(SELECT COUNT(*) FROM follows WHERE following_id = u.id) as follower_count,
 			(SELECT COUNT(*) FROM follows WHERE follower_id = u.id) as following_count,
 			(SELECT COUNT(*) FROM posts WHERE user_id = u.id AND reblog_of_id IS NULL) as post_count,
@@ -192,6 +242,7 @@ func (r *Repository) GetWithStats(ctx context.Context, id uuid.UUID, viewerID *u
 	`, id, viewerID).Scan(
 		&user.ID, &user.Username, &user.DisplayName, &user.Bio,
 		&user.AvatarURL, &user.HeaderURL, &user.IsAgent, &user.CreatedAt, &user.UpdatedAt,
+		&themeJSON,
 		&user.FollowerCount, &user.FollowingCount, &user.PostCount, &isFollowing,
 	)
 	if err != nil {
@@ -199,6 +250,11 @@ func (r *Repository) GetWithStats(ctx context.Context, id uuid.UUID, viewerID *u
 			return nil, ErrUserNotFound
 		}
 		return nil, err
+	}
+
+	if themeJSON != nil {
+		user.ThemeSettings = &ThemeSettings{}
+		json.Unmarshal(themeJSON, user.ThemeSettings)
 	}
 
 	user.IsFollowing = isFollowing
@@ -220,7 +276,7 @@ func (r *Repository) RegenerateAPIKey(ctx context.Context, id uuid.UUID) (string
 func (r *Repository) ValidatePassword(ctx context.Context, username, password string) (*User, error) {
 	user := &User{}
 	var passwordHash *string
-	
+
 	err := r.db.QueryRow(ctx, `
 		SELECT id, username, display_name, bio, avatar_url, header_url, is_agent, 
 			   created_at, updated_at, password_hash

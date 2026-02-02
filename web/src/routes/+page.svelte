@@ -5,6 +5,7 @@
   import PostComponent from '$lib/components/Post.svelte';
   import Composer from '$lib/components/Composer.svelte';
   import TrendingTags from '$lib/components/TrendingTags.svelte';
+  import InfiniteScroll from '$lib/components/InfiniteScroll.svelte';
 
   let posts = $state<Post[]>([]);
   let loading = $state(true);
@@ -51,7 +52,6 @@
     loadFeed();
   });
 
-  // Reload when user changes
   $effect(() => {
     if (auth.user !== undefined) {
       loadFeed();
@@ -64,32 +64,29 @@
 </svelte:head>
 
 <div class="space-y-6">
-  <!-- Trending Tags -->
   <TrendingTags />
 
-  <!-- Composer (if logged in) - spans full width -->
   {#if auth.user}
-    <div class="max-w-xl">
+    <div class="max-w-[400px]">
       <Composer onPost={loadFeed} />
     </div>
   {/if}
 
-  <!-- Feed -->
   {#if loading}
-    <div class="masonry-grid">
+    <div class="masonry-feed">
       {#each Array(6) as _, i}
         <div class="post-card p-4 animate-pulse">
           <div class="flex gap-3 mb-4">
-            <div class="w-12 h-12 rounded-lg bg-gray-200"></div>
+            <div class="w-12 h-12 rounded-lg" style="background: var(--color-surface-300);"></div>
             <div class="flex-1">
-              <div class="h-4 w-32 bg-gray-200 rounded mb-2"></div>
-              <div class="h-3 w-24 bg-gray-200 rounded"></div>
+              <div class="h-4 w-32 rounded mb-2" style="background: var(--color-surface-300);"></div>
+              <div class="h-3 w-24 rounded" style="background: var(--color-surface-200);"></div>
             </div>
           </div>
-          <div class="h-{20 + (i % 3) * 20} bg-gray-200 rounded mb-3"></div>
+          <div class="rounded mb-3" style="height: {80 + (i % 3) * 40}px; background: var(--color-surface-200);"></div>
           <div class="flex gap-4">
-            <div class="h-8 w-16 bg-gray-200 rounded-full"></div>
-            <div class="h-8 w-16 bg-gray-200 rounded-full"></div>
+            <div class="h-8 w-16 rounded-full" style="background: var(--color-surface-200);"></div>
+            <div class="h-8 w-16 rounded-full" style="background: var(--color-surface-200);"></div>
           </div>
         </div>
       {/each}
@@ -108,62 +105,42 @@
       {/if}
     </div>
   {:else}
-    <div class="masonry-grid">
+    <div class="masonry-feed">
       {#each posts as post (post.id)}
         <PostComponent {post} />
       {/each}
     </div>
 
-    {#if hasMore}
-      <div class="flex justify-center py-4">
-        <button
-          onclick={loadMore}
-          disabled={loadingMore}
-          class="btn-secondary"
-        >
-          {loadingMore ? 'Loading...' : 'Load more'}
-        </button>
-      </div>
-    {/if}
+    <InfiniteScroll onLoadMore={loadMore} {hasMore} loading={loadingMore} />
   {/if}
 </div>
 
 <style>
-  .masonry-grid {
-    columns: 1;
-    column-gap: 1rem;
-  }
-  
-  /* 2 columns on medium screens */
-  @media (min-width: 640px) {
-    .masonry-grid {
-      columns: 2;
-    }
-  }
-  
-  /* 3 columns on large screens */
-  @media (min-width: 1024px) {
-    .masonry-grid {
-      columns: 2;
-    }
-  }
-  
-  /* 3 columns on xl screens */
-  @media (min-width: 1280px) {
-    .masonry-grid {
-      columns: 3;
-    }
-  }
-  
-  /* 4 columns on 2xl screens */
-  @media (min-width: 1536px) {
-    .masonry-grid {
-      columns: 4;
-    }
+  .masonry-feed {
+    --col-width: 300px;
+    --gap: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--gap);
   }
 
-  .masonry-grid > :global(*) {
-    break-inside: avoid;
-    margin-bottom: 1rem;
+  .masonry-feed > :global(*) {
+    width: 100%;
+    max-width: 540px;
+  }
+  
+  @media (min-width: 880px) {
+    .masonry-feed {
+      display: block;
+      column-width: var(--col-width);
+      column-gap: var(--gap);
+    }
+    .masonry-feed > :global(*) {
+      width: 100%;
+      max-width: none;
+      break-inside: avoid;
+      margin-bottom: var(--gap);
+    }
   }
 </style>

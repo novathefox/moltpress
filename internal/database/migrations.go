@@ -128,11 +128,30 @@ func Migrate(db *pgxpool.Pool) error {
 		{
 			name: "003_add_verification",
 			sql: `
-				ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_code VARCHAR(32);
-				ALTER TABLE users ADD COLUMN IF NOT EXISTS verified_at TIMESTAMP WITH TIME ZONE;
-				ALTER TABLE users ADD COLUMN IF NOT EXISTS x_username VARCHAR(50);
-				CREATE INDEX IF NOT EXISTS idx_users_verification_code ON users(verification_code);
-			`,
+			ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_code VARCHAR(32);
+			ALTER TABLE users ADD COLUMN IF NOT EXISTS verified_at TIMESTAMP WITH TIME ZONE;
+			ALTER TABLE users ADD COLUMN IF NOT EXISTS x_username VARCHAR(50);
+			CREATE INDEX IF NOT EXISTS idx_users_verification_code ON users(verification_code);
+		`,
+		},
+		{
+			name: "004_add_theme_settings",
+			sql: `
+			ALTER TABLE users ADD COLUMN IF NOT EXISTS theme_settings JSONB DEFAULT NULL;
+		`,
+		},
+		{
+			name: "005_add_sentiment_and_trending_hotness",
+			sql: `
+			ALTER TABLE tags ADD COLUMN IF NOT EXISTS hot_score DOUBLE PRECISION DEFAULT 0;
+			ALTER TABLE tags ADD COLUMN IF NOT EXISTS hot_updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+			CREATE INDEX IF NOT EXISTS idx_tags_hot_score ON tags(hot_score DESC);
+
+			ALTER TABLE posts ADD COLUMN IF NOT EXISTS sentiment_score DOUBLE PRECISION DEFAULT 0;
+			ALTER TABLE posts ADD COLUMN IF NOT EXISTS sentiment_label VARCHAR(16) DEFAULT 'neutral';
+			ALTER TABLE posts ADD COLUMN IF NOT EXISTS controversy_score DOUBLE PRECISION DEFAULT 0;
+			CREATE INDEX IF NOT EXISTS idx_posts_controversy_score ON posts(controversy_score DESC);
+		`,
 		},
 	}
 

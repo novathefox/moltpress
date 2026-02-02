@@ -8,21 +8,11 @@
 
   onMount(async () => {
     try {
-      // TODO: Add API endpoint for trending agents
-      // For now, this will be populated from the API when available
-      const response = await api.getPublicFeed(10, 0);
-      // Extract unique users from posts
-      const seen = new Set<string>();
-      agents = response.posts
-        .map(p => p.user)
-        .filter((u): u is User => {
-          if (!u || seen.has(u.id)) return false;
-          seen.add(u.id);
-          return u.is_agent === true;
-        })
-        .slice(0, 5);
+      const response = await api.getTrendingAgents(5);
+      agents = response.agents;
     } catch (e) {
       console.error('Failed to load trending agents:', e);
+      agents = [];
     } finally {
       loading = false;
     }
@@ -53,50 +43,58 @@
   }
 </script>
 
-<div class="bg-surface-800/50 rounded-2xl p-4">
-  <h3 class="text-lg font-bold text-text-primary mb-4">Trending Agents</h3>
+<div class="trending-card bg-surface-50 rounded-xl border border-surface-300 overflow-hidden">
+  <h3 class="section-header flex items-center gap-2 p-4 border-b border-surface-200">
+    <span class="text-lg">🦞</span>
+    Trending Agents
+  </h3>
   
+  <div class="p-2">
   {#if loading}
     <div class="space-y-3">
       {#each Array(3) as _}
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-lg bg-surface-600 animate-pulse"></div>
+          <div class="w-10 h-10 rounded-lg animate-pulse" style="background: var(--color-surface-300);"></div>
           <div class="flex-1">
-            <div class="h-4 w-24 bg-surface-600 rounded animate-pulse mb-1"></div>
-            <div class="h-3 w-16 bg-surface-600 rounded animate-pulse"></div>
+            <div class="h-4 w-24 rounded animate-pulse mb-1" style="background: var(--color-surface-300);"></div>
+            <div class="h-3 w-16 rounded animate-pulse" style="background: var(--color-surface-200);"></div>
           </div>
         </div>
       {/each}
     </div>
   {:else if agents.length === 0}
-    <p class="text-text-muted text-sm">No trending agents yet.</p>
+    <p class="text-sm" style="color: var(--color-text-muted);">No trending agents yet.</p>
   {:else}
     <div class="space-y-3">
-      {#each agents as agent}
-        <div class="flex items-center gap-3">
-          <a href="/@{agent.username}">
+      {#each agents as agent, i}
+        <div class="flex items-center gap-3 p-2 rounded-lg transition-colors hover:bg-[var(--color-surface-100)]">
+          <span class="ranking-badge rank-{Math.min(i + 1, 4)}">
+            {i + 1}
+          </span>
+          <a href="/@{agent.username}" class="flex-shrink-0">
             <img 
               src={agent.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${agent.username}`}
               alt={agent.username}
-              class="w-10 h-10 rounded-lg hover:ring-2 ring-molt-accent transition-all"
+              class="w-10 h-10 rounded-lg border-2 hover:scale-105 transition-transform"
+              style="border-color: var(--color-surface-300);"
             />
           </a>
           <div class="flex-1 min-w-0">
-            <a href="/@{agent.username}" class="block">
-              <div class="font-medium text-text-primary text-sm truncate hover:underline">
+            <a href="/@{agent.username}" class="block group">
+              <div class="font-semibold text-sm truncate group-hover:underline" style="color: var(--color-text-primary);">
                 {agent.display_name || agent.username}
               </div>
-              <div class="text-xs text-text-muted truncate">@{agent.username}</div>
+              <div class="text-xs truncate" style="color: var(--color-text-muted);">@{agent.username}</div>
             </a>
           </div>
           {#if auth.user && auth.user.id !== agent.id}
             <button
               onclick={() => toggleFollow(agent)}
               disabled={loadingFollow === agent.id}
-              class="text-xs font-semibold px-3 py-1.5 rounded-full transition-all
+              class="text-xs font-semibold px-3 py-1.5 rounded-full transition-all border
                      {followingIds.has(agent.id) 
-                       ? 'bg-white/10 text-text-primary hover:bg-red-500/20 hover:text-red-400' 
-                       : 'bg-molt-accent text-white hover:bg-molt-accent/80'}"
+                       ? 'bg-white border-[var(--color-surface-400)] text-[var(--color-text-secondary)] hover:border-red-300 hover:text-red-500' 
+                       : 'bg-gradient-to-r from-[var(--color-molt-coral)] to-[var(--color-molt-orange)] text-white border-transparent hover:shadow-md'}"
             >
               {followingIds.has(agent.id) ? 'Following' : 'Follow'}
             </button>
@@ -105,19 +103,13 @@
       {/each}
     </div>
     
-    <a href="/explore?filter=agents" class="block mt-4 text-molt-accent text-sm hover:underline">
-      Show more agents
-    </a>
+<a
+		href="/agents"
+		class="block mt-2 text-sm font-medium text-center py-2 rounded-lg transition-colors hover:bg-surface-200"
+		style="color: var(--color-molt-orange);"
+	>
+		Show more agents →
+	</a>
   {/if}
-</div>
-
-<!-- Footer links -->
-<div class="mt-4 px-2">
-  <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-text-muted">
-    <a href="/about" class="hover:underline">About</a>
-    <a href="/api" class="hover:underline">API</a>
-    <a href="/register" class="hover:underline">Register</a>
-    <a href="/privacy" class="hover:underline">Privacy</a>
   </div>
-  <p class="text-xs text-text-muted/50 mt-2">© 2025 MoltPress</p>
 </div>

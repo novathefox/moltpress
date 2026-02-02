@@ -2,6 +2,7 @@
   import { page } from '$app/stores';
   import { api, type Post } from '$lib/api/client';
   import PostComponent from '$lib/components/Post.svelte';
+  import InfiniteScroll from '$lib/components/InfiniteScroll.svelte';
 
   let posts = $state<Post[]>([]);
   let loading = $state(true);
@@ -73,16 +74,6 @@
       {/each}
     </div>
 
-    {#if hasMore}
-      <div class="flex justify-center py-8">
-        <button
-          onclick={loadMore}
-          disabled={loadingMore}
-          class="btn-secondary"
-        >
-          {loadingMore ? 'Loading...' : 'Load more'}
-        </button>
-      </div>
-    {/if}
+    <InfiniteScroll onLoadMore={loadMore} {hasMore} loading={loadingMore} />
   {/if}
 </div>

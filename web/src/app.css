@@ -1,78 +1,101 @@
 @import "tailwindcss";
 
-/* MoltPress - Tumblr-inspired design for AI agents */
+/* MoltPress - Warm, organic, molt-inspired design */
 @theme {
-  /* Core brand colors */
-  --color-molt-blue: #001935;
-  --color-molt-accent: #00b8ff;
-  --color-molt-pink: #ff6b9d;
-  --color-molt-purple: #9b59b6;
+  /* Core brand colors - Molt/Lobster inspired */
+  --color-molt-orange: #e85d04;
+  --color-molt-coral: #f48c06;
+  --color-molt-red: #d00000;
+  --color-molt-gold: #faa307;
+  --color-molt-peach: #ffba08;
   
-  /* Dark surfaces */
-  --color-surface-900: #001122;
-  --color-surface-800: #001935;
-  --color-surface-700: #002244;
-  --color-surface-600: #003366;
-  --color-surface-500: #004488;
+  /* Warm light surfaces */
+  --color-surface-50: #fffcf7;
+  --color-surface-100: #fef7ed;
+  --color-surface-200: #fdf0dc;
+  --color-surface-300: #fbe4c4;
+  --color-surface-400: #f5d5a8;
+  --color-surface-500: #e8c088;
   
-  /* Text colors */
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #8899aa;
-  --color-text-muted: #556677;
+  /* Sidebar - warm cream */
+  --color-sidebar-bg: #fef7ed;
+  --color-sidebar-hover: #fdf0dc;
+  --color-sidebar-active: #fbe4c4;
+  --color-sidebar-border: #f5d5a8;
   
-  /* Card styling - LIGHT cards on dark bg like Tumblr */
+  /* Text colors for light mode */
+  --color-text-primary: #1a1203;
+  --color-text-secondary: #5c4a2a;
+  --color-text-muted: #9a8462;
+  
+  /* Card styling */
   --color-card-bg: #ffffff;
-  --color-card-text: #1a1a2e;
-  --color-card-text-secondary: #4a4a5a;
-  --color-card-text-muted: #7a7a8a;
-  --color-card-border: #e0e0e8;
-  --color-card-hover: #f8f8fc;
+  --color-card-text: #1a1203;
+  --color-card-text-secondary: #5c4a2a;
+  --color-card-text-muted: #9a8462;
+  --color-card-border: #f5d5a8;
+  --color-card-hover: #fffcf7;
+  --color-card-shadow: rgba(232, 93, 4, 0.08);
   
-  /* Interactions */
-  --color-like: #ff6b9d;
-  --color-reblog: #00b8ff;
-  --color-reply: #9b59b6;
+  /* Interactions - warm palette */
+  --color-like: #e85d04;
+  --color-reblog: #f48c06;
+  --color-reply: #d00000;
+  
+  /* Tag colors - warm spectrum */
+  --color-tag-orange: #fff0e0;
+  --color-tag-coral: #ffedd5;
+  --color-tag-gold: #fef3c7;
+  --color-tag-peach: #fef9c3;
 }
 
-/* Base styles */
+/* Base styles - Light warm mode */
 html {
-  background-color: var(--color-surface-900);
+  background-color: var(--color-surface-100);
   color: var(--color-text-primary);
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
   min-height: 100vh;
+  background: linear-gradient(135deg, var(--color-surface-100) 0%, var(--color-surface-50) 100%);
 }
 
-/* Scrollbar styling */
+/* Scrollbar styling - warm theme */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-surface-800);
+  background: var(--color-surface-200);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-surface-600);
+  background: var(--color-surface-400);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-surface-500);
+  background: var(--color-molt-coral);
 }
 
-/* Post cards - Light style like Tumblr */
+/* Post cards - Clean white with warm accents */
 .post-card {
   background: var(--color-card-bg);
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s;
+  border-radius: 1rem;
+  box-shadow: 
+    0 1px 3px var(--color-card-shadow),
+    0 4px 12px rgba(232, 93, 4, 0.04);
+  transition: all 0.2s ease;
+  border: 1px solid var(--color-surface-300);
 }
 
 .post-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 
+    0 4px 12px var(--color-card-shadow),
+    0 8px 24px rgba(232, 93, 4, 0.08);
+  transform: translateY(-2px);
+  border-color: var(--color-molt-coral);
 }
 
 /* Override text colors inside cards */
@@ -102,7 +125,8 @@ body {
 }
 
 .post-card .action-button:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--color-surface-100);
+  color: var(--color-molt-orange);
 }
 
 .action-button {
@@ -113,107 +137,152 @@ body {
   border-radius: 9999px;
   transition: all 0.2s;
   font-size: 0.875rem;
+  font-weight: 500;
 }
 
 .action-button.liked {
   color: var(--color-like) !important;
+  background: rgba(232, 93, 4, 0.1);
 }
 
 .action-button.reblogged {
   color: var(--color-reblog) !important;
+  background: rgba(244, 140, 6, 0.1);
 }
 
-/* Tag pills - colorful on light bg */
+/* Tag pills - Warm gradient backgrounds */
 .tag-pill {
   display: inline-block;
-  padding: 0.25rem 0.75rem;
-  background: #f0f0f5;
+  padding: 0.375rem 0.875rem;
+  background: linear-gradient(135deg, var(--color-surface-100) 0%, var(--color-surface-200) 100%);
+  border: 1px solid var(--color-surface-300);
   border-radius: 9999px;
   font-size: 0.875rem;
-  color: var(--color-card-text-secondary);
+  font-weight: 500;
+  color: var(--color-text-secondary);
   transition: all 0.2s;
 }
 
 .tag-pill:hover {
-  background: var(--color-molt-accent);
+  background: linear-gradient(135deg, var(--color-molt-coral) 0%, var(--color-molt-orange) 100%);
+  border-color: var(--color-molt-orange);
   color: white;
+  transform: translateY(-1px);
+}
+
+/* Trending tag variants */
+.tag-pill.tag-primary {
+  background: linear-gradient(135deg, var(--color-molt-coral) 0%, var(--color-molt-orange) 100%);
+  border-color: var(--color-molt-orange);
+  color: white;
+}
+
+.tag-pill.tag-secondary {
+  background: linear-gradient(135deg, var(--color-molt-gold) 0%, var(--color-molt-coral) 100%);
+  border-color: var(--color-molt-coral);
+  color: white;
+}
+
+.tag-pill.tag-tertiary {
+  background: linear-gradient(135deg, var(--color-molt-peach) 0%, var(--color-molt-gold) 100%);
+  border-color: var(--color-molt-gold);
+  color: var(--color-text-primary);
 }
 
 /* Avatar styling */
 .avatar {
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   object-fit: cover;
+  border: 2px solid var(--color-surface-300);
 }
 
-/* Input styling */
+/* Input styling - warm light mode */
 input, textarea {
-  background: var(--color-surface-700);
-  border: 1px solid var(--color-surface-600);
+  background: var(--color-surface-50);
+  border: 1px solid var(--color-surface-300);
   color: var(--color-text-primary);
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   padding: 0.75rem 1rem;
   width: 100%;
+  transition: all 0.2s;
 }
 
 input:focus, textarea:focus {
   outline: none;
-  border-color: var(--color-molt-accent);
-  box-shadow: 0 0 0 3px rgba(0, 184, 255, 0.2);
+  border-color: var(--color-molt-orange);
+  box-shadow: 0 0 0 3px rgba(232, 93, 4, 0.15);
+  background: white;
 }
 
-/* Inputs inside cards should have different styling */
+input::placeholder, textarea::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* Inputs inside cards */
 .post-card input,
 .post-card textarea {
-  background: #f5f5fa;
-  border-color: var(--color-card-border);
+  background: var(--color-surface-100);
+  border-color: var(--color-surface-300);
   color: var(--color-card-text);
 }
 
 .post-card input:focus,
 .post-card textarea:focus {
-  border-color: var(--color-molt-accent);
+  border-color: var(--color-molt-orange);
   background: white;
 }
 
-/* Button styles */
+/* Button styles - Warm gradients */
 .btn-primary {
-  background: linear-gradient(135deg, var(--color-molt-accent), var(--color-molt-purple));
-  color: white;
+  background: linear-gradient(135deg, var(--color-molt-coral) 0%, var(--color-molt-orange) 100%);
+  color: white !important;
   padding: 0.75rem 1.5rem;
   border-radius: 9999px;
   font-weight: 600;
   transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(0, 184, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(232, 93, 4, 0.3);
+  border: none;
+  text-decoration: none;
 }
 
 .btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 184, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(232, 93, 4, 0.4);
+  background: linear-gradient(135deg, var(--color-molt-orange) 0%, var(--color-molt-red) 100%);
+  color: white !important;
+  text-decoration: none;
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--color-text-primary);
+  background: white;
+  color: var(--color-molt-orange);
   padding: 0.75rem 1.5rem;
   border-radius: 9999px;
   font-weight: 600;
   transition: all 0.2s;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid var(--color-molt-orange);
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--color-surface-100);
+  transform: translateY(-1px);
 }
 
-/* Agent badge */
+/* Agent badge - Warm gradient */
 .agent-badge {
-  background: linear-gradient(135deg, var(--color-molt-accent), var(--color-molt-purple));
+  background: linear-gradient(135deg, var(--color-molt-coral) 0%, var(--color-molt-orange) 100%);
   color: white;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.125rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.6rem;
   border-radius: 9999px;
+}
+
+/* Verified badge */
+.verified-badge {
+  color: var(--color-molt-orange);
 }
 
 /* Loading spinner */
@@ -225,7 +294,7 @@ input:focus, textarea:focus {
   animation: spin 1s linear infinite;
 }
 
-/* Skeleton loading */
+/* Skeleton loading - warm tones */
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
@@ -233,4 +302,245 @@ input:focus, textarea:focus {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+
+/* Sidebar navigation item */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 9999px;
+  transition: all 0.2s;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.nav-item:hover {
+  background: var(--color-sidebar-hover);
+  color: var(--color-molt-orange);
+}
+
+.nav-item.active {
+  background: var(--color-sidebar-active);
+  color: var(--color-molt-orange);
+  font-weight: 600;
+}
+
+/* Trending card */
+.trending-card {
+  background: white;
+  border: 1px solid var(--color-surface-300);
+  border-radius: 1rem;
+  padding: 1rem;
+  transition: all 0.2s;
+}
+
+.trending-card:hover {
+  border-color: var(--color-molt-coral);
+  box-shadow: 0 4px 12px var(--color-card-shadow);
+}
+
+/* Search input */
+.search-input {
+  background: white;
+  border: 1px solid var(--color-surface-300);
+  border-radius: 9999px;
+  padding: 0.75rem 1rem 0.75rem 2.75rem;
+  transition: all 0.2s;
+}
+
+.search-input:focus {
+  border-color: var(--color-molt-orange);
+  box-shadow: 0 0 0 3px rgba(232, 93, 4, 0.15);
+}
+
+/* Engagement count badge */
+.engagement-count {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+/* Ranking badge for trending */
+.ranking-badge {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: white;
+}
+
+.ranking-badge.rank-1 { background: var(--color-molt-orange); }
+.ranking-badge.rank-2 { background: var(--color-molt-coral); }
+.ranking-badge.rank-3 { background: var(--color-molt-gold); }
+.ranking-badge.rank-4 { background: var(--color-surface-500); }
+
+/* Section headers */
+.section-header {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-surface-300);
+  margin-bottom: 1rem;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: white;
+  border-radius: 1rem;
+  border: 1px solid var(--color-surface-300);
+}
+
+.empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+/* Link styles */
+a {
+  color: var(--color-molt-orange);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+a:hover {
+  color: var(--color-molt-red);
+}
+
+/* Post content links should inherit */
+.post-card a {
+  color: var(--color-molt-orange);
+}
+
+.post-card a:hover {
+  color: var(--color-molt-red);
+  text-decoration: underline;
+}
+
+/* Step badges for numbered steps */
+.step-badge {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, var(--color-molt-coral) 0%, var(--color-molt-orange) 100%);
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(232, 93, 4, 0.3);
+  flex-shrink: 0;
+}
+
+/* Code blocks - dark warm theme for contrast */
+.code-block {
+  background: #2d2319;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  color: #f5d5a8;
+  border: 1px solid #3d3326;
+}
+
+.code-block code {
+  color: #f5d5a8;
+}
+
+/* Copy button for code blocks */
+.copy-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.1);
+  color: #f5d5a8;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.copy-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Warning box */
+.warning-box {
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, rgba(208, 0, 0, 0.08) 0%, rgba(232, 93, 4, 0.08) 100%);
+  border: 1px solid rgba(208, 0, 0, 0.2);
+}
+
+.warning-box p {
+  color: var(--color-molt-red);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.inline-code {
+  background: var(--color-surface-200);
+  color: var(--color-text-primary);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+}
+
+.tag-sm {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  background: transparent;
+  border: 1px solid var(--color-surface-400);
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-molt-orange);
+  transition: all 0.15s;
+}
+
+.tag-sm:hover {
+  border-color: var(--color-molt-orange);
+  background: rgba(232, 93, 4, 0.08);
+}
+
+.icon-button {
+  padding: 0.375rem;
+  border-radius: 0.375rem;
+  color: var(--color-text-muted);
+  transition: all 0.15s;
+}
+
+.icon-button:hover {
+  background: var(--color-surface-100);
+  color: var(--color-molt-orange);
+}
+
+.menu-item {
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  text-align: left;
+  font-size: 0.875rem;
+  transition: background 0.15s;
+}
+
+.menu-item:hover {
+  background: var(--color-surface-100);
 }

@@ -7,20 +7,21 @@ import (
 )
 
 type User struct {
-	ID               uuid.UUID  `json:"id"`
-	Username         string     `json:"username"`
-	DisplayName      *string    `json:"display_name,omitempty"`
-	Bio              *string    `json:"bio,omitempty"`
-	AvatarURL        *string    `json:"avatar_url,omitempty"`
-	HeaderURL        *string    `json:"header_url,omitempty"`
-	APIKey           *string    `json:"-"` // Never expose in JSON
-	PasswordHash     *string    `json:"-"`
-	IsAgent          bool       `json:"is_agent"`
-	VerificationCode *string    `json:"-"` // Never expose
-	VerifiedAt       *time.Time `json:"verified_at,omitempty"`
-	XUsername        *string    `json:"x_username,omitempty"`
-	CreatedAt        time.Time  `json:"created_at"`
-	UpdatedAt        time.Time  `json:"updated_at"`
+	ID               uuid.UUID      `json:"id"`
+	Username         string         `json:"username"`
+	DisplayName      *string        `json:"display_name,omitempty"`
+	Bio              *string        `json:"bio,omitempty"`
+	AvatarURL        *string        `json:"avatar_url,omitempty"`
+	HeaderURL        *string        `json:"header_url,omitempty"`
+	APIKey           *string        `json:"-"` // Never expose in JSON
+	PasswordHash     *string        `json:"-"`
+	IsAgent          bool           `json:"is_agent"`
+	VerificationCode *string        `json:"-"` // Never expose
+	VerifiedAt       *time.Time     `json:"verified_at,omitempty"`
+	XUsername        *string        `json:"x_username,omitempty"`
+	ThemeSettings    *ThemeSettings `json:"theme_settings,omitempty"`
+	CreatedAt        time.Time      `json:"created_at"`
+	UpdatedAt        time.Time      `json:"updated_at"`
 
 	// Computed fields (not in DB)
 	FollowerCount  int  `json:"follower_count,omitempty"`
@@ -31,20 +32,21 @@ type User struct {
 }
 
 type UserPublic struct {
-	ID             uuid.UUID  `json:"id"`
-	Username       string     `json:"username"`
-	DisplayName    *string    `json:"display_name,omitempty"`
-	Bio            *string    `json:"bio,omitempty"`
-	AvatarURL      *string    `json:"avatar_url,omitempty"`
-	HeaderURL      *string    `json:"header_url,omitempty"`
-	IsAgent        bool       `json:"is_agent"`
-	IsVerified     bool       `json:"is_verified"`
-	XUsername      *string    `json:"x_username,omitempty"`
-	CreatedAt      time.Time  `json:"created_at"`
-	FollowerCount  int        `json:"follower_count"`
-	FollowingCount int        `json:"following_count"`
-	PostCount      int        `json:"post_count"`
-	IsFollowing    bool       `json:"is_following,omitempty"`
+	ID             uuid.UUID      `json:"id"`
+	Username       string         `json:"username"`
+	DisplayName    *string        `json:"display_name,omitempty"`
+	Bio            *string        `json:"bio,omitempty"`
+	AvatarURL      *string        `json:"avatar_url,omitempty"`
+	HeaderURL      *string        `json:"header_url,omitempty"`
+	IsAgent        bool           `json:"is_agent"`
+	IsVerified     bool           `json:"is_verified"`
+	XUsername      *string        `json:"x_username,omitempty"`
+	ThemeSettings  *ThemeSettings `json:"theme_settings,omitempty"`
+	CreatedAt      time.Time      `json:"created_at"`
+	FollowerCount  int            `json:"follower_count"`
+	FollowingCount int            `json:"following_count"`
+	PostCount      int            `json:"post_count"`
+	IsFollowing    bool           `json:"is_following,omitempty"`
 }
 
 func (u *User) ToPublic() UserPublic {
@@ -58,6 +60,7 @@ func (u *User) ToPublic() UserPublic {
 		IsAgent:        u.IsAgent,
 		IsVerified:     u.VerifiedAt != nil,
 		XUsername:      u.XUsername,
+		ThemeSettings:  u.ThemeSettings,
 		CreatedAt:      u.CreatedAt,
 		FollowerCount:  u.FollowerCount,
 		FollowingCount: u.FollowingCount,
@@ -76,10 +79,11 @@ type CreateUserRequest struct {
 }
 
 type UpdateUserRequest struct {
-	DisplayName *string `json:"display_name,omitempty"`
-	Bio         *string `json:"bio,omitempty"`
-	AvatarURL   *string `json:"avatar_url,omitempty"`
-	HeaderURL   *string `json:"header_url,omitempty"`
+	DisplayName   *string        `json:"display_name,omitempty"`
+	Bio           *string        `json:"bio,omitempty"`
+	AvatarURL     *string        `json:"avatar_url,omitempty"`
+	HeaderURL     *string        `json:"header_url,omitempty"`
+	ThemeSettings *ThemeSettings `json:"theme_settings,omitempty"`
 }
 
 type RegisterResponse struct {
@@ -90,5 +94,6 @@ type RegisterResponse struct {
 }
 
 type VerifyRequest struct {
-	XUsername string `json:"x_username"`
+	XUsername string  `json:"x_username"`
+	TweetURL  *string `json:"tweet_url,omitempty"`
 }
