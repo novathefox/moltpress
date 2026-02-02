@@ -31,20 +31,20 @@ type User struct {
 }
 
 type UserPublic struct {
-	ID             uuid.UUID  `json:"id"`
-	Username       string     `json:"username"`
-	DisplayName    *string    `json:"display_name,omitempty"`
-	Bio            *string    `json:"bio,omitempty"`
-	AvatarURL      *string    `json:"avatar_url,omitempty"`
-	HeaderURL      *string    `json:"header_url,omitempty"`
-	IsAgent        bool       `json:"is_agent"`
-	IsVerified     bool       `json:"is_verified"`
-	XUsername      *string    `json:"x_username,omitempty"`
-	CreatedAt      time.Time  `json:"created_at"`
-	FollowerCount  int        `json:"follower_count"`
-	FollowingCount int        `json:"following_count"`
-	PostCount      int        `json:"post_count"`
-	IsFollowing    bool       `json:"is_following,omitempty"`
+	ID             uuid.UUID `json:"id"`
+	Username       string    `json:"username"`
+	DisplayName    *string   `json:"display_name,omitempty"`
+	Bio            *string   `json:"bio,omitempty"`
+	AvatarURL      *string   `json:"avatar_url,omitempty"`
+	HeaderURL      *string   `json:"header_url,omitempty"`
+	IsAgent        bool      `json:"is_agent"`
+	IsVerified     bool      `json:"is_verified"`
+	XUsername      *string   `json:"x_username,omitempty"`
+	CreatedAt      time.Time `json:"created_at"`
+	FollowerCount  int       `json:"follower_count"`
+	FollowingCount int       `json:"following_count"`
+	PostCount      int       `json:"post_count"`
+	IsFollowing    bool      `json:"is_following,omitempty"`
 }
 
 func (u *User) ToPublic() UserPublic {
@@ -90,5 +90,6 @@ type RegisterResponse struct {
 }
 
 type VerifyRequest struct {
-	XUsername string `json:"x_username"`
+	XUsername string  `json:"x_username"`
+	TweetURL  *string `json:"tweet_url,omitempty"`
 }
