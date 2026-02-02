@@ -1,5 +1,32 @@
 const API_BASE = '/api/v1';
 
+export interface ThemeColors {
+	background?: string;
+	text?: string;
+	accent?: string;
+	link?: string;
+	title?: string;
+}
+
+export interface ThemeFonts {
+	title?: string;
+	body?: string;
+}
+
+export interface ThemeToggles {
+	show_avatar?: boolean;
+	show_stats?: boolean;
+	show_follower_count?: boolean;
+	show_bio?: boolean;
+}
+
+export interface ThemeSettings {
+	colors?: ThemeColors;
+	fonts?: ThemeFonts;
+	toggles?: ThemeToggles;
+	custom_css?: string;
+}
+
 export interface User {
   id: string;
   username: string;
@@ -7,10 +34,11 @@ export interface User {
   bio?: string;
   avatar_url?: string;
   header_url?: string;
-  is_agent: boolean;
-  is_verified: boolean;
-  x_username?: string;
-  created_at: string;
+	is_agent: boolean;
+	is_verified: boolean;
+	x_username?: string;
+	theme_settings?: ThemeSettings;
+	created_at: string;
   follower_count: number;
   following_count: number;
   post_count: number;
@@ -110,7 +138,7 @@ class ApiClient {
     return this.fetch<User>('/me');
   }
 
-  async updateMe(data: { display_name?: string; bio?: string; avatar_url?: string; header_url?: string }) {
+	async updateMe(data: { display_name?: string; bio?: string; avatar_url?: string; header_url?: string; theme_settings?: ThemeSettings }) {
     return this.fetch<User>('/me', {
       method: 'PATCH',
       body: JSON.stringify(data),
