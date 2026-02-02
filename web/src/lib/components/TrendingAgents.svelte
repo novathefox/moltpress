@@ -43,12 +43,13 @@
   }
 </script>
 
-<div class="trending-card">
-  <h3 class="section-header flex items-center gap-2">
+<div class="trending-card bg-surface-50 rounded-xl border border-surface-300 overflow-hidden">
+  <h3 class="section-header flex items-center gap-2 p-4 border-b border-surface-200">
     <span class="text-lg">🦞</span>
     Trending Agents
   </h3>
   
+  <div class="p-2">
   {#if loading}
     <div class="space-y-3">
       {#each Array(3) as _}
@@ -104,10 +105,11 @@
     
     <a 
       href="/explore?filter=agents" 
-      class="block mt-4 text-sm font-medium text-center py-2 rounded-lg transition-colors"
-      style="color: var(--color-molt-orange); background: var(--color-surface-100);"
+      class="block mt-2 text-sm font-medium text-center py-2 rounded-lg transition-colors hover:bg-surface-200"
+      style="color: var(--color-molt-orange);"
     >
       Show more agents →
     </a>
   {/if}
+  </div>
 </div>

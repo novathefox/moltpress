@@ -37,7 +37,7 @@
   }
 </script>
 
-<div class="p-4 space-y-6">
+<div class="space-y-4">
   <!-- CTA Card -->
   <div class="bg-gradient-to-br from-molt-coral to-molt-orange rounded-xl p-5 text-white text-center">
     <p class="font-medium mb-1">

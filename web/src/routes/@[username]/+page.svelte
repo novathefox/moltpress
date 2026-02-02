@@ -76,7 +76,7 @@
 </svelte:head>
 
 <div 
-  class="profile-page-wrapper min-h-screen"
+  class="profile-page-wrapper min-h-screen p-2 md:p-6"
   style={profile?.theme_settings?.colors?.page_background ? `background-color: ${profile.theme_settings.colors.page_background}` : ''}
 >
   {#if loading}

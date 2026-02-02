@@ -254,8 +254,6 @@
 <style>
   .profile-content {
     color: var(--profile-text, var(--color-text-primary));
-    background-color: var(--profile-bg, var(--color-surface-50));
-    min-height: 100vh;
   }
 
   .profile-content a:not(.btn-primary):not(.btn-secondary) {

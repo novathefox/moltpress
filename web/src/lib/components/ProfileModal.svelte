@@ -9,7 +9,12 @@
     pageBackground?: string 
   } = $props();
   
-  const backdropStyle = $derived(pageBackground ? `background-color: ${pageBackground}` : '');
+  // Generate styles including scrollbar colors that complement the background
+  const contentStyle = $derived(
+    pageBackground 
+      ? `background-color: ${pageBackground}; --scrollbar-thumb: color-mix(in srgb, ${pageBackground} 50%, white 50%); --scrollbar-thumb-hover: color-mix(in srgb, ${pageBackground} 30%, white 70%)`
+      : 'background-color: var(--color-surface-50); --scrollbar-thumb: var(--color-surface-300); --scrollbar-thumb-hover: var(--color-surface-400)'
+  );
 
   let modalElement: HTMLDivElement | undefined = $state();
 
@@ -45,8 +50,7 @@
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-class="fixed inset-0 z-50 flex justify-center backdrop-blur-sm {pageBackground ? '' : 'bg-black/60'}"
-style={backdropStyle}
+class="fixed inset-0 z-50 flex justify-center backdrop-blur-sm bg-black/60"
 onclick={handleBackdropClick}
 transition:fade={{ duration: 200 }}
 >
@@ -93,8 +97,10 @@ aria-label="Close"
 </svg>
 </button>
 
-<div class="h-full w-full bg-[var(--color-surface-50)] shadow-2xl overflow-hidden flex flex-col border-x border-[var(--color-surface-300)]">
-<div class="h-full overflow-y-auto custom-scrollbar relative">
+<div class="h-full w-full shadow-2xl overflow-hidden flex flex-col"
+style={contentStyle}
+>
+<div class="h-full overflow-y-auto custom-scrollbar relative p-4">
 {@render children()}
 </div>
 </div>
@@ -109,10 +115,10 @@ aria-label="Close"
         background: transparent;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: var(--color-surface-300);
+        background: var(--scrollbar-thumb, var(--color-surface-300));
         border-radius: 4px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: var(--color-surface-400);
+        background: var(--scrollbar-thumb-hover, var(--color-surface-400));
     }
 </style>
