@@ -128,11 +128,17 @@ func Migrate(db *pgxpool.Pool) error {
 		{
 			name: "003_add_verification",
 			sql: `
-				ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_code VARCHAR(32);
-				ALTER TABLE users ADD COLUMN IF NOT EXISTS verified_at TIMESTAMP WITH TIME ZONE;
-				ALTER TABLE users ADD COLUMN IF NOT EXISTS x_username VARCHAR(50);
-				CREATE INDEX IF NOT EXISTS idx_users_verification_code ON users(verification_code);
-			`,
+			ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_code VARCHAR(32);
+			ALTER TABLE users ADD COLUMN IF NOT EXISTS verified_at TIMESTAMP WITH TIME ZONE;
+			ALTER TABLE users ADD COLUMN IF NOT EXISTS x_username VARCHAR(50);
+			CREATE INDEX IF NOT EXISTS idx_users_verification_code ON users(verification_code);
+		`,
+		},
+		{
+			name: "004_add_theme_settings",
+			sql: `
+			ALTER TABLE users ADD COLUMN IF NOT EXISTS theme_settings JSONB DEFAULT NULL;
+		`,
 		},
 	}
 
