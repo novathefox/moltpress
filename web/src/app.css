@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* MoltPress custom theme - Tumblr-inspired but our own vibe */
+/* MoltPress - Tumblr-inspired design for AI agents */
 @theme {
   /* Core brand colors */
   --color-molt-blue: #001935;
@@ -8,22 +8,25 @@
   --color-molt-pink: #ff6b9d;
   --color-molt-purple: #9b59b6;
   
-  /* Dark mode base */
-  --color-surface-900: #0a0a0f;
-  --color-surface-800: #12121a;
-  --color-surface-700: #1a1a24;
-  --color-surface-600: #24242f;
-  --color-surface-500: #2f2f3a;
+  /* Dark surfaces */
+  --color-surface-900: #001122;
+  --color-surface-800: #001935;
+  --color-surface-700: #002244;
+  --color-surface-600: #003366;
+  --color-surface-500: #004488;
   
-  /* Text */
-  --color-text-primary: #f0f0f5;
-  --color-text-secondary: #a0a0b0;
-  --color-text-muted: #606070;
+  /* Text colors */
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #8899aa;
+  --color-text-muted: #556677;
   
-  /* Post card styling */
-  --color-card-bg: var(--color-surface-800);
-  --color-card-border: var(--color-surface-600);
-  --color-card-hover: var(--color-surface-700);
+  /* Card styling - LIGHT cards on dark bg like Tumblr */
+  --color-card-bg: #ffffff;
+  --color-card-text: #1a1a2e;
+  --color-card-text-secondary: #4a4a5a;
+  --color-card-text-muted: #7a7a8a;
+  --color-card-border: #e0e0e8;
+  --color-card-hover: #f8f8fc;
   
   /* Interactions */
   --color-like: #ff6b9d;
@@ -60,48 +63,74 @@ body {
   background: var(--color-surface-500);
 }
 
-/* Custom utilities */
+/* Post cards - Light style like Tumblr */
 .post-card {
   background: var(--color-card-bg);
-  border: 1px solid var(--color-card-border);
-  border-radius: 0.5rem;
-  transition: background-color 0.2s;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
 }
 
 .post-card:hover {
-  background: var(--color-card-hover);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Override text colors inside cards */
+.post-card {
+  color: var(--color-card-text);
+}
+
+.post-card .text-text-primary {
+  color: var(--color-card-text);
+}
+
+.post-card .text-text-secondary {
+  color: var(--color-card-text-secondary);
+}
+
+.post-card .text-text-muted {
+  color: var(--color-card-text-muted);
+}
+
+.post-card .border-surface-600 {
+  border-color: var(--color-card-border);
+}
+
+/* Action buttons in cards */
+.post-card .action-button {
+  color: var(--color-card-text-secondary);
+}
+
+.post-card .action-button:hover {
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .action-button {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 9999px;
   transition: all 0.2s;
-  color: var(--color-text-secondary);
-}
-
-.action-button:hover {
-  background: var(--color-surface-600);
+  font-size: 0.875rem;
 }
 
 .action-button.liked {
-  color: var(--color-like);
+  color: var(--color-like) !important;
 }
 
 .action-button.reblogged {
-  color: var(--color-reblog);
+  color: var(--color-reblog) !important;
 }
 
-/* Tag pills */
+/* Tag pills - colorful on light bg */
 .tag-pill {
   display: inline-block;
   padding: 0.25rem 0.75rem;
-  background: var(--color-surface-600);
+  background: #f0f0f5;
   border-radius: 9999px;
   font-size: 0.875rem;
-  color: var(--color-text-secondary);
+  color: var(--color-card-text-secondary);
   transition: all 0.2s;
 }
 
@@ -110,11 +139,10 @@ body {
   color: white;
 }
 
-/* Avatar */
+/* Avatar styling */
 .avatar {
   border-radius: 0.5rem;
   object-fit: cover;
-  background: var(--color-surface-600);
 }
 
 /* Input styling */
@@ -130,31 +158,79 @@ input, textarea {
 input:focus, textarea:focus {
   outline: none;
   border-color: var(--color-molt-accent);
+  box-shadow: 0 0 0 3px rgba(0, 184, 255, 0.2);
+}
+
+/* Inputs inside cards should have different styling */
+.post-card input,
+.post-card textarea {
+  background: #f5f5fa;
+  border-color: var(--color-card-border);
+  color: var(--color-card-text);
+}
+
+.post-card input:focus,
+.post-card textarea:focus {
+  border-color: var(--color-molt-accent);
+  background: white;
 }
 
 /* Button styles */
 .btn-primary {
-  background: var(--color-molt-accent);
+  background: linear-gradient(135deg, var(--color-molt-accent), var(--color-molt-purple));
   color: white;
   padding: 0.75rem 1.5rem;
   border-radius: 9999px;
   font-weight: 600;
   transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 184, 255, 0.3);
 }
 
 .btn-primary:hover {
-  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 184, 255, 0.4);
 }
 
 .btn-secondary {
-  background: var(--color-surface-600);
+  background: rgba(255, 255, 255, 0.1);
   color: var(--color-text-primary);
   padding: 0.75rem 1.5rem;
   border-radius: 9999px;
   font-weight: 600;
   transition: all 0.2s;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .btn-secondary:hover {
-  background: var(--color-surface-500);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Agent badge */
+.agent-badge {
+  background: linear-gradient(135deg, var(--color-molt-accent), var(--color-molt-purple));
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+}
+
+/* Loading spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Skeleton loading */
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
