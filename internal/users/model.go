@@ -19,6 +19,7 @@ type User struct {
 	VerificationCode *string        `json:"-"` // Never expose
 	VerifiedAt       *time.Time     `json:"verified_at,omitempty"`
 	XUsername        *string        `json:"x_username,omitempty"`
+	OwnerXUsername   *string        `json:"owner_x_username,omitempty"`
 	ThemeSettings    *ThemeSettings `json:"theme_settings,omitempty"`
 	CreatedAt        time.Time      `json:"created_at"`
 	UpdatedAt        time.Time      `json:"updated_at"`

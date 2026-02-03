@@ -66,11 +66,11 @@ func (r *Repository) Create(ctx context.Context, req CreateUserRequest) (*Create
 	err := r.db.QueryRow(ctx, `
 		INSERT INTO users (username, display_name, bio, avatar_url, api_key, password_hash, is_agent, verification_code)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-		RETURNING id, username, display_name, bio, avatar_url, header_url, is_agent, verification_code, verified_at, x_username, created_at, updated_at
+		RETURNING id, username, display_name, bio, avatar_url, header_url, is_agent, verification_code, verified_at, x_username, owner_x_username, created_at, updated_at
 	`, req.Username, req.DisplayName, req.Bio, req.AvatarURL, apiKey, passwordHash, req.IsAgent, verificationCode).Scan(
 		&user.ID, &user.Username, &user.DisplayName, &user.Bio,
 		&user.AvatarURL, &user.HeaderURL, &user.IsAgent, &user.VerificationCode,
-		&user.VerifiedAt, &user.XUsername, &user.CreatedAt, &user.UpdatedAt,
+		&user.VerifiedAt, &user.XUsername, &user.OwnerXUsername, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		if err.Error() == `ERROR: duplicate key value violates unique constraint "users_username_key" (SQLSTATE 23505)` {
@@ -96,13 +96,13 @@ func (r *Repository) GetByID(ctx context.Context, id uuid.UUID) (*User, error) {
 	user := &User{}
 	err := r.db.QueryRow(ctx, `
 		SELECT id, username, display_name, bio, avatar_url, header_url, is_agent,
-		       verification_code, verified_at, x_username, created_at, updated_at
+		       verification_code, verified_at, x_username, owner_x_username, created_at, updated_at
 		FROM users WHERE id = $1
 	`, id).Scan(
 		&user.ID, &user.Username, &user.DisplayName, &user.Bio,
 		&user.AvatarURL, &user.HeaderURL, &user.IsAgent,
 		&user.VerificationCode, &user.VerifiedAt, &user.XUsername,
-		&user.CreatedAt, &user.UpdatedAt,
+		&user.OwnerXUsername, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -144,13 +144,13 @@ func (r *Repository) GetByAPIKey(ctx context.Context, apiKey string) (*User, err
 	user := &User{}
 	err := r.db.QueryRow(ctx, `
 		SELECT id, username, display_name, bio, avatar_url, header_url, is_agent,
-		       verification_code, verified_at, x_username, created_at, updated_at
+		       verification_code, verified_at, x_username, owner_x_username, created_at, updated_at
 		FROM users WHERE api_key = $1
 	`, apiKey).Scan(
 		&user.ID, &user.Username, &user.DisplayName, &user.Bio,
 		&user.AvatarURL, &user.HeaderURL, &user.IsAgent,
 		&user.VerificationCode, &user.VerifiedAt, &user.XUsername,
-		&user.CreatedAt, &user.UpdatedAt,
+		&user.OwnerXUsername, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -399,13 +399,13 @@ func (r *Repository) GetByVerificationCode(ctx context.Context, code string) (*U
 	user := &User{}
 	err := r.db.QueryRow(ctx, `
 		SELECT id, username, display_name, bio, avatar_url, header_url, is_agent,
-			   verification_code, verified_at, x_username, created_at, updated_at
+		       verification_code, verified_at, x_username, owner_x_username, created_at, updated_at
 		FROM users WHERE verification_code = $1
 	`, code).Scan(
 		&user.ID, &user.Username, &user.DisplayName, &user.Bio,
 		&user.AvatarURL, &user.HeaderURL, &user.IsAgent,
 		&user.VerificationCode, &user.VerifiedAt, &user.XUsername,
-		&user.CreatedAt, &user.UpdatedAt,
+		&user.OwnerXUsername, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -422,16 +422,17 @@ func (r *Repository) VerifyUser(ctx context.Context, userID uuid.UUID, xUsername
 		UPDATE users SET
 			verified_at = CURRENT_TIMESTAMP,
 			x_username = $2,
+			owner_x_username = $2,
 			verification_code = NULL,
 			updated_at = CURRENT_TIMESTAMP
 		WHERE id = $1
 		RETURNING id, username, display_name, bio, avatar_url, header_url, is_agent,
-				  verification_code, verified_at, x_username, created_at, updated_at
+				  verification_code, verified_at, x_username, owner_x_username, created_at, updated_at
 	`, userID, xUsername).Scan(
 		&user.ID, &user.Username, &user.DisplayName, &user.Bio,
 		&user.AvatarURL, &user.HeaderURL, &user.IsAgent,
 		&user.VerificationCode, &user.VerifiedAt, &user.XUsername,
-		&user.CreatedAt, &user.UpdatedAt,
+		&user.OwnerXUsername, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		return nil, err

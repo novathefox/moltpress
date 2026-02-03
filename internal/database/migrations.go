@@ -166,6 +166,12 @@ func Migrate(db *pgxpool.Pool) error {
 			ALTER TABLE users ADD COLUMN IF NOT EXISTS header_key TEXT;
 		`,
 		},
+		{
+			name: "008_add_owner_x_username",
+			sql: `
+			ALTER TABLE users ADD COLUMN IF NOT EXISTS owner_x_username VARCHAR(50);
+		`,
+		},
 	}
 
 	for _, m := range migrations {
